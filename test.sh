@@ -6,6 +6,12 @@ if [ -z "$PINTOS_HOME" ]; then
   exit 1
 fi
 
+# Enable static mode if "--static" is passed as an argument
+STATIC_MODE=false
+if [[ "$1" == "--static" ]]; then
+  STATIC_MODE=true
+fi
+
 # Set Pintos project path (based on the script location)
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 PINTOS_KERNEL="$PINTOS_HOME/threads/build/kernel.bin"
@@ -23,23 +29,47 @@ fi
 echo "[INFO] Git Repository Name: $GIT_REPO"
 
 # 1. Build Pintos and verify success
-echo "[INFO] Building Pintos..."
-cd "$PINTOS_HOME/threads" || exit 1
-make clean > /dev/null 2>&1  # Clean previous build
-make > /dev/null 2>&1        # Build Pintos
+if [ "$STATIC_MODE" = false ]; then
+  echo "[INFO] Building Pintos..."
+  cd "$PINTOS_HOME/threads" || exit 1
+  make clean > /dev/null 2>&1  # Clean previous build
+  make > /dev/null 2>&1        # Build Pintos
 
-# Check if kernel.bin exists after the build
-if [ ! -f "$PINTOS_KERNEL" ]; then
-  echo "[ERROR] Build failed. kernel.bin not found."
-  exit 1
+  # Check if kernel.bin exists after the build
+  if [ ! -f "$PINTOS_KERNEL" ]; then
+    echo "[ERROR] Build failed. kernel.bin not found."
+    exit 1
+  fi
+
+  echo "[INFO] Build successful."
+else
+  # If in STATIC mode, ensure kernel.bin exists
+  if [ ! -f "$PINTOS_KERNEL" ]; then
+    echo "[ERROR] kernel.bin not found. Failed."
+    exit 1
+  fi
 fi
-
-echo "[INFO] Build successful."
 
 # 2. Check if the Git repository name is included in kernel.bin
 if ! strings "$PINTOS_KERNEL" | grep -q "$GIT_REPO"; then
   echo "[ERROR] Git repository name not found in kernel.bin"
   exit 1
+fi
+
+if [ "$STATIC_MODE" = true ]; then
+  # In STATIC mode, compile Pintos before running test cases
+  echo "[INFO] Building Pintos..."
+  cd "$PINTOS_HOME/threads" || exit 1
+  make clean > /dev/null 2>&1  # Clean previous build
+  make > /dev/null 2>&1        # Build Pintos
+
+  # Check if kernel.bin exists after the build
+  if [ ! -f "$PINTOS_KERNEL" ]; then
+    echo "[ERROR] Build failed. kernel.bin not found."
+    exit 1
+  fi
+
+  echo "[INFO] Build successful."
 fi
 
 # 3. Run test test 
