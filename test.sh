@@ -7,9 +7,9 @@ if [ -z "$PINTOS_HOME" ]; then
 fi
 
 # Set Pintos project path (based on the script location)
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 PINTOS_KERNEL="$PINTOS_HOME/threads/build/kernel.bin"
 PINTOS_OUTPUT="$PINTOS_HOME/pintos_output.txt"
-REF_OUTPUT="$PINTOS_HOME/alarm-single_ref.txt"
 
 # Set PATH
 export PATH=$PATH:$PINTOS_HOME/utils
@@ -42,22 +42,16 @@ if ! strings "$PINTOS_KERNEL" | grep -q "$GIT_REPO"; then
     exit 1
 fi
 
-# 3. Run Pintos and compare output with reference file
+# 3. Run test test 
 echo "[INFO] Running Pintos: alarm-single..."
 cd "$PINTOS_HOME/threads/build" || exit 1
-pintos --qemu -- -q run alarm-single > "$PINTOS_OUTPUT" 2>&1
+make tests/threads/alarm-single.result | tee "$PINTOS_OUTPUT"
 
-sed -E 's|file=/tmp/[^,]+.dsk|file=/tmp/random.dsk|g' "$PINTOS_OUTPUT" > "$PINTOS_OUTPUT"
-
-# Compare output with reference file
-if diff -q "$PINTOS_OUTPUT" "$REF_OUTPUT" > /dev/null; then
-    echo "[INFO] Pintos output matches reference output."
-else
-    echo "[ERROR] Pintos output does not match reference output."
-    diff -u "$PINTOS_OUTPUT" "$REF_OUTPUT"  # Show differences
+if ! grep -q "pass tests/threads/alarm-single" "$PINTOS_OUTPUT"; then
+    echo "[ERROR] Pintos basic test failed!"
+    cat "$PINTOS_OUTPUT"  # Show output for debugging
     exit 1
 fi
 
-echo "[SUCCESS] Pintos setup test passed!"
+echo "[SUCCESS] All test passed!"
 exit 0
-
