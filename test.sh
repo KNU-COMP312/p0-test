@@ -9,6 +9,7 @@ fi
 # Enable static mode if "--static" is passed as an argument
 STATIC_MODE=false
 if [[ "$1" == "--static" ]]; then
+  echo "[INFO] Run in STATIC mode."
   STATIC_MODE=true
 fi
 
