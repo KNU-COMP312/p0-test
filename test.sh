@@ -47,7 +47,7 @@ echo "[INFO] Running Pintos: alarm-single..."
 cd "$PINTOS_HOME/threads/build" || exit 1
 pintos --qemu -- -q run alarm-single > "$PINTOS_OUTPUT" 2>&1
 
-sed -E 's|file=/tmp/[^,]+.dsk|file=/tmp/random.dsk|g' "$REF_OUTPUT" > "$REF_OUTPUT"
+sed -E 's|file=/tmp/[^,]+.dsk|file=/tmp/random.dsk|g' "$PINTOS_OUTPUT" > "$PINTOS_OUTPUT"
 
 # Compare output with reference file
 if diff -q "$PINTOS_OUTPUT" "$REF_OUTPUT" > /dev/null; then
